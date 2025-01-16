@@ -39,6 +39,7 @@
         "mercadopago/dx-php": "^2.4",
         "milon/barcode": "^10.0",
         "mpdf/mpdf": "^8.2",
+        "muxinc/mux-php": "^3.21",
         "nwidart/laravel-modules": "^10.0",
         "paypal/rest-api-sdk-php": "^1.6",
         "phpoffice/phpspreadsheet": "^1.29",
