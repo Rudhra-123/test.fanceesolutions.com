@@ -22,7 +22,7 @@
         "brian2694/laravel-toastr": "^5.56",
         "doctrine/dbal": "^3.2",
         "gregwar/captcha": "^1.1",
-        "guzzlehttp/guzzle": "^7.2",
+        "guzzlehttp/guzzle": "^7.9",
         "intervention/image": "^2.7",
         "iyzico/iyzipay-php": "^2.0",
         "kreait/firebase-php": "^7.0",

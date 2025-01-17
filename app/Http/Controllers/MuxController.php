@@ -29,26 +29,35 @@ class MuxController extends Controller
         return $this->getView();
     }
 
-    public function upload(Request $request): \Illuminate\Http\RedirectResponse
+
+
+    public function upload(Request $request)
     {
-        dd($request);
         $request->validate([
-            'video' => 'required|mimes:mp4,mov,avi|max:2000000', // Adjust max size as needed
+            'video' => 'required|file|mimes:mp4,mov,avi|max:2048000',
         ]);
-
-        $videoPath = $request->file('video')->getPathName();
-
-        // Upload the video to Mux
-        $muxAssetId = $this->muxService->uploadVideo($videoPath);
-
-        // Store the asset ID
-        MuxUri::create([
-            'asset_id' => $muxAssetId,
-            'order_id' => $request->input('order_id'), // Save the order_id
-        ]);
-
-        return redirect()->back()->with('muxAssetId', $muxAssetId);
+    
+        $file = $request->file('video');
+        $uploadUrl = $this->muxService->createDirectUpload();
+    
+        $fileStream = fopen($file->getRealPath(), 'r');
+        $ch = curl_init($uploadUrl);
+        curl_setopt($ch, CURLOPT_PUT, true);
+        curl_setopt($ch, CURLOPT_INFILE, $fileStream);
+        curl_setopt($ch, CURLOPT_INFILESIZE, $file->getSize());
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    
+        $response = curl_exec($ch);
+        fclose($fileStream);
+        curl_close($ch);
+    
+        if ($response === false) {
+            return back()->withErrors(['error' => 'Failed to upload video to Mux']);
+        }
+    
+        return back()->with('success', 'Video uploaded successfully!');
     }
+    
 
     public function getVideoInfo($id): JsonResponse
     {
