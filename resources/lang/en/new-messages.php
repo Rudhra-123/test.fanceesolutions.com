@@ -9020,4 +9020,5 @@ return [
 	"ex :" => "Ex :",
 	"3rd_Party_Storage" => "3rd Party Storage",
 	"ex : yahoo" => "Ex : yahoo",
+	"no_coupon_found" => "No coupon found",
 ];
