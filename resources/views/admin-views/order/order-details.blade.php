@@ -290,6 +290,9 @@
                             </table>
                         </div>
 
+
+
+
                         <hr/>
                         @php($orderTotalPriceSummary = \App\Utils\OrderManager::getOrderTotalPriceSummary(order: $order))
                         <div class="row justify-content-md-end mb-3">
@@ -335,15 +338,17 @@
                                 </dl>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
 
 
         <!-- added the view here  -->
 
 
             @include('admin-views.mux.view')
+                    </div>
+                </div>
+            </div>
+
+
 
 
 
