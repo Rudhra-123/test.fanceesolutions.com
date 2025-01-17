@@ -31,6 +31,7 @@ class MuxController extends Controller
 
     public function upload(Request $request): \Illuminate\Http\RedirectResponse
     {
+        dd($request);
         $request->validate([
             'video' => 'required|mimes:mp4,mov,avi|max:2000000', // Adjust max size as needed
         ]);
