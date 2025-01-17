@@ -9,5 +9,7 @@ class MuxVideo extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['asset_id', 'playback_id', 'order_id'];
+    protected $table = 'mux_videos';
+
+    protected $fillable = ['uri', 'order_id'];
 }

@@ -14,8 +14,7 @@ return new class extends Migration {
     {
         Schema::create('mux_videos', function (Blueprint $table) {
             $table->id();
-            $table->string('asset_id')->unique(); // Mux asset ID
-            $table->string('playback_id')->unique(); // Mux playback ID
+            $table->string('uri'); // Mux asset ID
             $table->unsignedBigInteger('order_id')->nullable(); // Link to the order
             $table->timestamps();
 

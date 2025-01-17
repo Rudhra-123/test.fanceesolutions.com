@@ -12,6 +12,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Artisan;
 use Brian2694\Toastr\Facades\Toastr;
 use App\Utils\Helpers;
+use Illuminate\Support\Facades\DB;
+
 
 class MuxController extends Controller
 {
@@ -33,13 +35,19 @@ class MuxController extends Controller
 
     public function upload(Request $request)
     {
+        // Validate video file input
         $request->validate([
             'video' => 'required|file|mimes:mp4,mov,avi|max:2048000',
         ]);
     
+        // Get the uploaded file
         $file = $request->file('video');
-        $uploadUrl = $this->muxService->createDirectUpload();
     
+        // Generate the direct upload URL from Mux
+        $uploadUrl = $this->muxService->createDirectUpload();
+        
+    
+        // Stream the file to Mux using the upload URL
         $fileStream = fopen($file->getRealPath(), 'r');
         $ch = curl_init($uploadUrl);
         curl_setopt($ch, CURLOPT_PUT, true);
@@ -55,8 +63,27 @@ class MuxController extends Controller
             return back()->withErrors(['error' => 'Failed to upload video to Mux']);
         }
     
-        return back()->with('success', 'Video uploaded successfully!');
+        // Extract unique upload_id from the URL
+        $urlParts = parse_url($uploadUrl);
+        parse_str($urlParts['query'], $queryParams);
+        $uploadId = $queryParams['upload_id'] ?? null;
+        
+        if ($uploadId) {
+            
+            DB::table('mux_videos')->insert([
+                'uri' => $uploadId,
+                'order_id' => $request->input('order_id'), // Can be null
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+    
+            return back()->with('success', 'Video uploaded successfully!');
+        } else {
+            return back()->withErrors(['error' => 'Failed to retrieve upload ID']);
+        }
     }
+    
+    
     
 
     public function getVideoInfo($id): JsonResponse
