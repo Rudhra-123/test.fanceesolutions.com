@@ -339,6 +339,15 @@
                 </div>
             </div>
 
+
+        <!-- added the view here  -->
+
+
+            @include('admin-views.mux.view')
+
+
+
+
             <div class="col-lg-4 d-flex flex-column gap-3">
                 @if($order->payment_method == 'offline_payment' && isset($order->offlinePayments))
                     <div class="card">
