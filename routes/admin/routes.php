@@ -172,6 +172,17 @@ use App\Http\Controllers\Admin\Deliveryman\DeliveryManCashCollectController;
 use App\Http\Controllers\Admin\Settings\StorageConnectionSettingsController;
 use App\Http\Controllers\Admin\Settings\VendorRegistrationSettingController;
 use App\Http\Controllers\Admin\Notification\PushNotificationSettingsController;
+use App\Http\Controllers\MuxController;
+use App\Enums\ViewPaths\Admin\MuxAPI; // Adjust as per your enums (if any)
+
+// Display the Mux upload form
+Route::get('/mux-upload', function () {
+    return view('admin-views.order.order-details'); // Ensure this points to your Mux upload form
+})->name('mux.upload.form');
+
+// Handle Mux video upload
+Route::post('/mux-upload', [MuxController::class, 'upload'])->name('mux.upload');
+
 
 
 Route::controller(SharedController::class)->group(function () {
