@@ -454,6 +454,9 @@
                             <hr>
                         </div>
 
+
+                       @include('admin-views.mux.render')
+
                         @php($orderTotalPriceSummary = \App\Utils\OrderManager::getOrderTotalPriceSummary(order: $order))
                         <div class="row d-flex justify-content-end mt-2">
                             <div class="col-md-8 col-lg-5">

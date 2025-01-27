@@ -35,51 +35,79 @@ class MuxController extends Controller
 
     public function upload(Request $request)
     {
-        // Validate video file input
+        // Validate the video file input
         $request->validate([
-            'video' => 'required|file|mimes:mp4,mov,avi|max:2048000',
+            'video' => 'required|file|mimes:mp4,mov,avi|max:2048000', // Max size: ~2GB
         ]);
     
         // Get the uploaded file
         $file = $request->file('video');
     
-        // Generate the direct upload URL from Mux
-        $uploadUrl = $this->muxService->createDirectUpload();
-        
+        try {
+            // Step 1: Generate the direct upload URL from Mux
+            $data  = $this->muxService->createDirectUpload();
+            $uploadId = $data['data']['id'];
+            $uploadUrl = $data['data']['url'];
+            // dd($uploadUrl);
+            //dd($uploadId);
+            \Log::info('Mux Direct Upload URL:', ['url' => $uploadUrl]);
     
-        // Stream the file to Mux using the upload URL
-        $fileStream = fopen($file->getRealPath(), 'r');
-        $ch = curl_init($uploadUrl);
-        curl_setopt($ch, CURLOPT_PUT, true);
-        curl_setopt($ch, CURLOPT_INFILE, $fileStream);
-        curl_setopt($ch, CURLOPT_INFILESIZE, $file->getSize());
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            // Step 2: Open the file stream
+            $fileStream = fopen($file->getRealPath(), 'r');
+            if (!$fileStream) {
+                throw new Exception("Failed to open file for reading.");
+            }
     
-        $response = curl_exec($ch);
-        fclose($fileStream);
-        curl_close($ch);
+            // Step 3: Stream the file to Mux using the upload URL
+            $ch = curl_init($uploadUrl);
+            curl_setopt($ch, CURLOPT_PUT, true);
+            curl_setopt($ch, CURLOPT_INFILE, $fileStream);
+            curl_setopt($ch, CURLOPT_INFILESIZE, $file->getSize());
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     
-        if ($response === false) {
-            return back()->withErrors(['error' => 'Failed to upload video to Mux']);
-        }
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     
-        // Extract unique upload_id from the URL
-        $urlParts = parse_url($uploadUrl);
-        parse_str($urlParts['query'], $queryParams);
-        $uploadId = $queryParams['upload_id'] ?? null;
-        
-        if ($uploadId) {
-            
+            fclose($fileStream);
+            curl_close($ch);
+    
+            if ($response === false || $httpCode !== 200) {
+                throw new Exception("Failed to upload video to Mux. HTTP Code: {$httpCode}, Response: " . curl_error($ch));
+            }
+
+            $assetDetails = $this->muxService->getAssetDetailsFromUploadId($uploadId);
+            //dd($assetDetails);
+            $playbackId = $assetDetails['playback_id'] ?? null;
+            //dd($playbackId);
+
+            if (!$playbackId) {
+             throw new Exception("Playback ID not found.");
+              }
+    
+            // Step 4: Extract the `upload_id` from the upload URL
+            $urlParts = parse_url($uploadUrl);
+            parse_str($urlParts['query'], $queryParams);
+            $uploadId = $queryParams['upload_id'] ?? null;
+             
+            //dd($uploadId);
+            if (!$uploadId) {
+                throw new Exception("Upload ID not found in the upload URL.");
+            }
+    
+            \Log::info('Extracted Upload ID:', ['upload_id' => $uploadId]);
+    
+            // Step 5: Save the `upload_id` to the database
             DB::table('mux_videos')->insert([
-                'uri' => $uploadId,
-                'order_id' => $request->input('order_id'), // Can be null
+                'uri' => $playbackId,
+                'order_id' => $request->input('order_id', null), // Optional order_id
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
     
             return back()->with('success', 'Video uploaded successfully!');
-        } else {
-            return back()->withErrors(['error' => 'Failed to retrieve upload ID']);
+        } catch (Exception $e) {
+            \Log::error('Error uploading video to Mux: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to upload video: ' . $e->getMessage()]);
         }
     }
     

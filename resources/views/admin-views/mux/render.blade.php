@@ -1,33 +1,29 @@
 @php
-    use App\Models\MuxUri;
+    use Illuminate\Support\Facades\DB;
 
-    $data = $order->id;
+    $data = $order->id; // Replace $order->id with your actual order ID variable
 
     // Initialize variables
-    $playbackUrl = null;
+    $playbackId = null;
 
-    // Check if the current order ID exists in the mux_videos table
-    $muxUriRecord = MuxUri::where('order_id', $data)->latest('created_at')->first();
+    // Query the mux_videos table for the latest record with the given order_id
+    $muxUriRecord = DB::table('mux_videos')->where('order_id', $data)->latest('created_at')->first();
 
     if ($muxUriRecord) {
-        $uploadId = $muxUriRecord->uri;
-
-        // Generate the playback URL
-        $playbackUrl = "https://stream.mux.com/{$uploadId}.m3u8";
+        $playbackId = $muxUriRecord->uri; // Fetch the playback ID from the database
     }
 @endphp
 
-<div class="video-container" style="max-width: 640px; margin: auto; text-align: center;">
-    <h1>Watch this Video!</h1>
-    <div class="video-and-button" style="display: flex; align-items: center; justify-content: center;">
-        @if($playbackUrl)
-            <!-- Display the video with the unique identifier -->
-            <video width="640" height="360" controls>
-                <source src="{{ $playbackUrl }}" type="application/x-mpegURL">
-                Your browser does not support the video tag.
-            </video>
-        @else
-            <p>No video found for this order.</p>
-        @endif
-    </div>
-</div>
+<script src="https://cdn.jsdelivr.net/npm/@mux/mux-player"></script>
+@if ($playbackId)
+    <mux-player
+      playback-id="{{ $playbackId }}" <!-- Use the dynamic playback ID -->
+      metadata-video-title="Video for Order ID {{ $data }}" <!-- Optional metadata -->
+      metadata-viewer-user-id="User_{{ auth()->id() }}" <!-- Optional metadata -->
+      primary-color="#ffffff"
+      secondary-color="#000000"
+      accent-color="#fa50b5"
+    ></mux-player>
+@else
+    <p>No video available for this order.</p>
+@endif
