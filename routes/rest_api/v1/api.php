@@ -24,6 +24,13 @@ use App\Http\Controllers\RestAPI\v1\SellerController;
 use App\Http\Controllers\RestAPI\v1\ShippingMethodController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Customer\PaymentController;
+use App\Http\Controllers\RestAPI\v1\MuxControllers;
+
+Route::prefix('mux')->group(function () {
+    Route::post('/upload', [MuxControllers::class, 'uploadVideoApi'])->name('api.mux.upload');
+    Route::get('/video/{orderId}', [MuxControllers::class, 'getVideoByOrderId'])->name('api.mux.getVideo');
+});
+
 
 /*
 |--------------------------------------------------------------------------
